@@ -510,15 +510,22 @@ export const fetchCrateDetails = async (crateId: string): Promise<CrateDetailsRe
   }
 };
 
+// List all users
 export const listUsers = async (): Promise<UserRow[]> => {
   const { data, error } = await supabase
     .from('users')
-    .select('*');
+    .select('*')
+    .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data as UserRow[];
+  if (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+
+  return data || [];
 };
 
+// Create a new user
 export const createUser = async (
   userData: Omit<UserInsert, 'id' | 'created_at' | 'updated_at' | 'last_login_at' | 'status' | 'hashed_password'> & { password: string }
 ): Promise<UserRow> => {
@@ -530,6 +537,7 @@ export const createUser = async (
       options: {
         data: {
           full_name: userData.full_name,
+          role: userData.role
         },
       },
     });
@@ -538,33 +546,26 @@ export const createUser = async (
     if (!authData.user) throw new Error('Failed to create user');
 
     // 2. Insert user into users table
-    const insertUser: UserInsert = {
-      id: authData.user.id,
-      user_code: userData.user_code,
-      full_name: userData.full_name,
-      email: userData.email,
-      role: userData.role,
-      location: userData.location || 'Primary Hub', // Default to 'Primary Hub' if not specified
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      last_login_at: null,
-    };
-    const { data: userRow, error: userInsertError } = await supabase
+    const { data: userRow, error: insertError } = await supabase
       .from('users')
-      .insert([insertUser])
+      .insert([{
+        id: authData.user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        location: userData.location || 'Primary Hub',
+        is_active: true,
+        status: 'active'
+      }])
       .select()
       .single();
-    if (userInsertError) throw userInsertError;
-    return userRow as UserRow;
-  } catch (error: unknown) {
+
+    if (insertError) throw insertError;
+    if (!userRow) throw new Error('Failed to create user record');
+
+    return userRow;
+  } catch (error) {
     console.error('Error creating user:', error);
-    let message = 'Failed to create user';
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (typeof error === 'object' && error && 'message' in error) {
-      message = String((error as any).message);
-    }
-    throw new Error(message);
+    throw error;
   }
 };
