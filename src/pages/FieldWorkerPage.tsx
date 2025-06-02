@@ -3,15 +3,10 @@ import Header from '../components/layout/Header';
 import BarcodeScanner from '../components/field-worker/BarcodeScanner';
 import { OrderBatchProvider } from '../contexts/OrderBatchContext';
 import OrderBatchPanel from '../components/OrderBatchPanel';
-import FieldWorkerLoginForm from '../components/auth/FieldWorkerLoginForm';
 import { useAuth } from '../contexts/AuthContext';
 
 const FieldWorkerPage: React.FC = () => {
   const { state } = useAuth();
-
-  if (!state.isAuthenticated) {
-    return <FieldWorkerLoginForm />;
-  }
 
   return (
     <OrderBatchProvider>
