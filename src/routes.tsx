@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
   }
 
   if (!state.user || !allowedRoles.includes(state.user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/\" replace />;
   }
 
   return <>{children}</>;
