@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/supabase';
 
@@ -81,73 +81,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  const fetchUserData = async (userId: string) => {
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+
+    if (userData) {
+      dispatch({
+        type: 'SET_USER',
+        payload: {
+          id: userData.id,
+          email: userData.email,
+          fullName: userData.full_name,
+          role: userData.role as UserRole,
+        },
+      });
+    }
+  };
+
   useEffect(() => {
-    // Initial session check
-    const checkSession = async () => {
+    const initAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
 
         if (session?.user) {
           dispatch({ type: 'SET_SESSION', payload: session });
-          
-          // Fetch user data
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (userError) throw userError;
-
-          if (userData) {
-            dispatch({
-              type: 'SET_USER',
-              payload: {
-                id: userData.id,
-                email: userData.email,
-                fullName: userData.full_name,
-                role: userData.role as UserRole,
-              },
-            });
-          }
+          await fetchUserData(session.user.id);
+        } else {
+          dispatch({ type: 'SET_LOADING', payload: false });
         }
       } catch (error) {
-        console.error('Session check error:', error);
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to restore session' });
-      } finally {
+        console.error('Auth initialization error:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize auth' });
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     };
 
-    checkSession();
+    initAuth();
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         dispatch({ type: 'SET_SESSION', payload: session });
         
         if (session?.user) {
           try {
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-
-            if (error) throw error;
-
-            if (userData) {
-              dispatch({
-                type: 'SET_USER',
-                payload: {
-                  id: userData.id,
-                  email: userData.email,
-                  fullName: userData.full_name,
-                  role: userData.role as UserRole,
-                },
-              });
-            }
+            await fetchUserData(session.user.id);
           } catch (error) {
             console.error('Error fetching user data:', error);
             dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch user data' });
@@ -177,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login error:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to login' });
-      throw error; // Re-throw to handle in the component
+      throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
