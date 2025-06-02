@@ -1,0 +1,152 @@
+.dashboardContainer {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.welcomeCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.welcomeHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.welcomeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  background-color: #EFF6FF;
+  border-radius: 0.5rem;
+  color: #2563EB;
+}
+
+.welcomeTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.welcomeText {
+  color: #4B5563;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.statHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.statTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280;
+  margin: 0;
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.usersIcon {
+  composes: statIcon;
+  background-color: #EFF6FF;
+  color: #2563EB;
+}
+
+.cratesIcon {
+  composes: statIcon;
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.activeIcon {
+  composes: statIcon;
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+.statValue {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0;
+  line-height: 1;
+}
+
+.statChange {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.statIncrease {
+  color: #059669;
+}
+
+.statDecrease {
+  color: #DC2626;
+}
+
+.quickLinks {
+  margin-top: 1rem;
+}
+
+.quickLinkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.375rem;
+  color: #4B5563;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.quickLinkButton:hover {
+  background-color: #E5E7EB;
+  color: #1F2937;
+}
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}

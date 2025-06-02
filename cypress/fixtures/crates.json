@@ -1,0 +1,26 @@
+[
+  {
+    "crate_id": "CRATE-1234",
+    "location": "Warehouse A",
+    "bread_quantity": 24,
+    "last_updated": "2023-06-15T10:30:00Z",
+    "last_updated_by": "fieldworker@example.com",
+    "status": "active"
+  },
+  {
+    "crate_id": "CRATE-5678",
+    "location": "Warehouse B",
+    "bread_quantity": 12,
+    "last_updated": "2023-06-14T08:15:00Z",
+    "last_updated_by": "fieldworker@example.com",
+    "status": "active"
+  },
+  {
+    "crate_id": "CRATE-9012",
+    "location": "Distribution Center",
+    "bread_quantity": 36,
+    "last_updated": "2023-06-13T14:45:00Z",
+    "last_updated_by": "fieldworker@example.com",
+    "status": "in_transit"
+  }
+]
