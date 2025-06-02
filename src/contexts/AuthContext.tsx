@@ -82,20 +82,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      dispatch({ type: 'SET_SESSION', payload: session });
-      
-      if (session?.user) {
-        try {
-          // Fetch user data from your users table
-          const { data: userData, error } = await supabase
+    // Initial session check
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        if (session?.user) {
+          dispatch({ type: 'SET_SESSION', payload: session });
+          
+          // Fetch user data
+          const { data: userData, error: userError } = await supabase
             .from('users')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (error) throw error;
+          if (userError) throw userError;
 
           if (userData) {
             dispatch({
@@ -108,16 +111,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               },
             });
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch user data' });
         }
+      } catch (error) {
+        console.error('Session check error:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to restore session' });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
-      
-      dispatch({ type: 'SET_LOADING', payload: false });
+    };
+
+    checkSession();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        dispatch({ type: 'SET_SESSION', payload: session });
+        
+        if (session?.user) {
+          try {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (error) throw error;
+
+            if (userData) {
+              dispatch({
+                type: 'SET_USER',
+                payload: {
+                  id: userData.id,
+                  email: userData.email,
+                  fullName: userData.full_name,
+                  role: userData.role as UserRole,
+                },
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch user data' });
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        dispatch({ type: 'LOGOUT' });
+      }
     });
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
@@ -137,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login error:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to login' });
+      throw error; // Re-throw to handle in the component
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -162,6 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Signup error:', error);
       dispatch({ type: 'SET_ERROR', payload: error instanceof Error ? error.message : 'Failed to sign up' });
+      throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
